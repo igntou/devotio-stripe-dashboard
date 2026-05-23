@@ -1,0 +1,4 @@
+streamlit>=1.57.0
+pandas>=2.0.0
+stripe>=14.0.0
+gspread>=6.0.0

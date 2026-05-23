@@ -1,0 +1,18 @@
+# Secrets — NUNCA subir al repo
+.streamlit/secrets.toml
+*.json
+
+# Data local — vive en Google Sheets en producción
+data/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.env
+
+# Output / reportes
+output/
+*.pdf
+*.docx
+"Validation Stripe May 19"/
