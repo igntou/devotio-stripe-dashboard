@@ -303,9 +303,6 @@ with st.sidebar:
             f"</div>",
             unsafe_allow_html=True,
         )
-        st.caption(
-            f"Próximo pull: {pull_start_dt.strftime('%d %b %H:%M')} → ahora"
-        )
     else:
         st.warning("Primera vez — elige la fecha de inicio del historial")
         initial_start = st.date_input(
