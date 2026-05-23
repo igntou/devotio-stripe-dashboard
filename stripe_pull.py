@@ -345,21 +345,21 @@ def pull(api_key: str, start_dt: datetime, end_dt: datetime, out_path: str):
     )
     refund_charges: list = []
     for ch in charges:
-        ch_status = ch.get("status") or ""
+        ch_status = safe_get(ch, "status") or ""
 
         if ch_status == "failed":
             row = row_from_charge(ch)
             add(row, f"charge_{ch['id']}")
 
         # Collect refunds regardless
-        if (ch.get("amount_refunded") or 0) > 0:
+        if (safe_get(ch, "amount_refunded") or 0) > 0:
             refund_charges.append(ch)
 
     # ── 3. Refunds ────────────────────────────────────────────────────────────
     print("[3/4] Reembolsos...")
     refund_count = 0
     for ch in refund_charges:
-        refunds = ch.get("refunds", {})
+        refunds = safe_get(ch, "refunds") or {}
         refund_data = refunds.get("data", []) if isinstance(refunds, dict) else getattr(refunds, "data", [])
         for ref in refund_data:
             ref_ts = safe_get(ref, "created") or 0
@@ -407,7 +407,7 @@ def pull(api_key: str, start_dt: datetime, end_dt: datetime, out_path: str):
             if cust_id and cust_id not in cust_map:
                 try:
                     c = stripe.Customer.retrieve(cust_id)
-                    cust_map[cust_id] = {"email": c.get("email",""), "name": c.get("name","")}
+                    cust_map[cust_id] = {"email": safe_get(c, "email") or "", "name": safe_get(c, "name") or ""}
                 except Exception:
                     cust_map[cust_id] = {}
             row = row_from_subscription_event(sub, cust_map)
