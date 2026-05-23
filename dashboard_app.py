@@ -12,6 +12,7 @@ import os
 import sys
 import shutil
 import tempfile
+import traceback
 from datetime import datetime, timezone, timedelta, date
 from pathlib import Path
 
@@ -424,15 +425,11 @@ if generate:
     )
 
     progress_bar = st.progress(0, text="Iniciando conexión con Stripe…")
-    status_box   = st.empty()
-    captured     = io.StringIO()
+    tmp_path = None
 
     try:
         sys.path.insert(0, str(PROJECT_DIR))
         import stripe_pull
-
-        old_stdout = sys.stdout
-        sys.stdout = captured
 
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as tmp:
             tmp_path = tmp.name
@@ -440,12 +437,9 @@ if generate:
         progress_bar.progress(10, text="[1/4] Consultando facturas de suscripción…")
         stripe_pull.pull(api_key, pull_start_dt, pull_end_dt, tmp_path)
 
-        sys.stdout = old_stdout
         progress_bar.progress(80, text="Actualizando historial…")
-
         added, total = merge_into_master(tmp_path)
 
-        # Sync to Google Sheets (always on)
         progress_bar.progress(90, text="Sincronizando con Google Sheets…")
         sheets_synced = sync_to_sheets()
 
@@ -464,17 +458,15 @@ if generate:
         else:
             st.warning(f"📊 Google Sheets: {msg}")
 
-        log_text = captured.getvalue()
-        if log_text.strip():
-            with st.expander("🔧 Log de ejecución"):
-                st.code(log_text)
-
         st.markdown("---")
 
     except Exception as e:
-        sys.stdout = old_stdout if "old_stdout" in dir() else sys.stdout
+        if tmp_path and Path(tmp_path).exists():
+            os.unlink(tmp_path)
         progress_bar.empty()
-        st.error(f"❌ Error al conectar con Stripe: {e}")
+        st.error(f"❌ Error: {e}")
+        with st.expander("🔧 Detalle del error"):
+            st.code(traceback.format_exc())
         st.stop()
 
     # Reload pull_log after update
