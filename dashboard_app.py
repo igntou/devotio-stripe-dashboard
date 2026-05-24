@@ -31,6 +31,7 @@ DATA_DIR    = PROJECT_DIR / "data"
 MASTER_CSV  = DATA_DIR / "devotio_stripe_MASTER.csv"
 PULL_LOG    = DATA_DIR / "pull_log.json"
 UTC         = timezone.utc
+CST         = timezone(timedelta(hours=-6))  # Costa Rica (UTC-6, sin horario de verano)
 
 
 # ── Store helpers ─────────────────────────────────────────────────────────────
@@ -295,10 +296,11 @@ with st.sidebar:
         pull_end_dt   = datetime.now(UTC)
 
         total_rec = pull_log.get("total_master_records", 0)
+        last_at_cst = last_at.astimezone(CST)
         st.markdown(
             f"<div class='pull-status'>"
             f"<b>Última actualización</b><br>"
-            f"{last_at.strftime('%d %b %Y · %H:%M')} UTC<br>"
+            f"{last_at_cst.strftime('%d %b %Y · %H:%M')} CST<br>"
             f"<small>{total_rec:,} registros en historial</small>"
             f"</div>",
             unsafe_allow_html=True,
@@ -418,7 +420,7 @@ if generate:
     st.markdown("---")
     st.markdown(
         f"### 📡 Actualizando: "
-        f"{pull_start_dt.strftime('%d %b %Y %H:%M')} UTC → ahora"
+        f"{pull_start_dt.astimezone(CST).strftime('%d %b %Y %H:%M')} CST → ahora"
     )
 
     progress_bar = st.progress(0, text="Iniciando conexión con Stripe…")
