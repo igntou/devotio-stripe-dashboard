@@ -215,7 +215,8 @@ def sync_to_sheets() -> tuple[bool, str]:
         # Sync data
         ws = sh.sheet1
         ws.clear()
-        ws.update([df.columns.tolist()] + df.values.tolist())
+        ws.update(range_name="A1", values=[df.columns.tolist()] + df.values.tolist(),
+                  value_input_option="USER_ENTERED")
         # Sync pull_log to "config" tab
         if PULL_LOG.exists():
             try:
