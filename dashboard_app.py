@@ -252,6 +252,47 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+
+# ── Login gate ────────────────────────────────────────────────────────────────
+def _check_login():
+    correct_pw = st.secrets.get("APP_PASSWORD", "")
+    if not correct_pw:
+        return  # No password configured → allow access
+    if st.session_state.get("authenticated"):
+        return  # Already logged in
+
+    st.markdown("""
+    <style>
+    [data-testid="stSidebar"] { display: none; }
+    .login-box { max-width: 380px; margin: 10vh auto 0; padding: 40px;
+                 background: #1A1A2E; border-radius: 16px;
+                 border: 1px solid #0F3A75; }
+    .login-box h2 { color: #FFFFFF !important; text-align: center;
+                    font-size: 1.4rem; margin-bottom: 4px; }
+    .login-box p  { color: #A0C0E8 !important; text-align: center;
+                    font-size: 0.85rem; margin-bottom: 24px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="login-box">', unsafe_allow_html=True)
+    st.markdown('<h2>💳 Devotio Stripe</h2>', unsafe_allow_html=True)
+    st.markdown('<p>Ingresa tu contraseña para continuar</p>', unsafe_allow_html=True)
+
+    pw = st.text_input("Contraseña", type="password", label_visibility="collapsed",
+                       placeholder="Contraseña")
+    if st.button("Entrar", use_container_width=True, type="primary"):
+        if pw == correct_pw:
+            st.session_state["authenticated"] = True
+            st.rerun()
+        else:
+            st.error("Contraseña incorrecta")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+    st.stop()
+
+
+_check_login()
+
 st.markdown("""
 <style>
 [data-testid="stSidebar"] { background: #1A1A2E; }
