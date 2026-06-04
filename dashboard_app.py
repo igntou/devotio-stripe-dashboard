@@ -198,11 +198,19 @@ def sync_to_sheets() -> tuple[bool, str]:
         return False, "Sin credenciales de Google Sheets"
     try:
         df = pd.read_csv(MASTER_CSV).fillna("")
-        # Convert date columns to M/D/YYYY H:MM:SS so Sheets treats them as real dates
+        # Convert date columns to M/D/YYYY H:MM:SS so Sheets treats them as real dates.
+        # Build format from components to avoid %-m/%-d platform differences in Python 3.14.
+        def _fmt_date(v):
+            try:
+                dt = pd.to_datetime(v)
+                if pd.isna(dt):
+                    return ""
+                return f"{dt.month}/{dt.day}/{dt.year} {dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}"
+            except Exception:
+                return ""
         for col in ("fecha_utc", "fecha_cst"):
             if col in df.columns:
-                parsed = pd.to_datetime(df[col], errors="coerce")
-                df[col] = parsed.dt.strftime("%-m/%-d/%Y %H:%M:%S").where(parsed.notna(), "")
+                df[col] = df[col].apply(_fmt_date)
         sh = gc.open_by_key(_get_sheets_id())
         # Sync data
         ws = sh.sheet1
